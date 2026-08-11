@@ -17,6 +17,8 @@ const state = {
 function render() {
   const app = document.getElementById("app");
   app.innerHTML = getScreenHTML(state);
+  currentScreenEl = app.firstElementChild;
+  safeAfterScreenMount();
 }
 
 function resetState() {

@@ -1,24 +1,28 @@
 let isTransitioning = false;
+let currentScreenEl = null;
 
 function goTo(direction, mutateFn) {
   if (isTransitioning) return;
 
   const app = document.getElementById("app");
-  const oldEl = app.firstElementChild;
+  const oldEl = currentScreenEl;
 
-  if (!oldEl) {
-    mutateFn();
-    render();
-    return;
-  }
-
-  isTransitioning = true;
   mutateFn();
 
   const temp = document.createElement("div");
   temp.innerHTML = getScreenHTML(state);
   const newEl = temp.firstElementChild;
+
+  if (!oldEl) {
+    app.appendChild(newEl);
+    currentScreenEl = newEl;
+    safeAfterScreenMount();
+    return;
+  }
+
+  isTransitioning = true;
   app.appendChild(newEl);
+  currentScreenEl = newEl;
 
   const outClass = direction === "forward" ? "screen-anim-out-left" : "screen-anim-out-right";
   const inClass = direction === "forward" ? "screen-anim-in-right" : "screen-anim-in-left";
@@ -26,15 +30,29 @@ function goTo(direction, mutateFn) {
   oldEl.classList.add(outClass);
   newEl.classList.add(inClass);
 
-  newEl.addEventListener(
-    "animationend",
-    () => {
-      newEl.classList.remove(inClass);
-      oldEl.remove();
-      isTransitioning = false;
-    },
-    { once: true }
-  );
+  let finished = false;
+  function finishTransition() {
+    if (finished) return;
+    finished = true;
+    newEl.classList.remove(inClass);
+    if (oldEl.isConnected) oldEl.remove();
+    isTransitioning = false;
+  }
+
+  newEl.addEventListener("animationend", finishTransition, { once: true });
+  // Safety net: a screen transition must never be able to permanently jam
+  // navigation, no matter what goes wrong with the animation itself.
+  setTimeout(finishTransition, 500);
+
+  safeAfterScreenMount();
+}
+
+function safeAfterScreenMount() {
+  try {
+    afterScreenMount();
+  } catch (err) {
+    console.error("afterScreenMount failed:", err);
+  }
 }
 
 const swipeHandlers = {
@@ -65,11 +83,22 @@ const swipeHandlers = {
   },
   topicGrid: {
     left: () => {
-      if (state.selectedTopics.length === 3) {
-        // Next screen (3-topic menu / questions) isn't built yet — no-op for now.
-      } else {
+      if (state.selectedTopics.length !== 3) {
         const t = content[state.language];
         showToast(t.ui.topicsLockToast);
+        return;
+      }
+
+      if (state.mode === "full") {
+        goTo("forward", () => {
+          state.screen = "topicMenu";
+        });
+      } else {
+        goTo("forward", () => {
+          state.currentTopic = null;
+          state.questionIndex = 0;
+          state.screen = "questions";
+        });
       }
     },
     right: () => {
@@ -80,7 +109,162 @@ const swipeHandlers = {
       });
     },
   },
+  topicMenu: {
+    left: () => {
+      const allCompleted = state.selectedTopics.every((topic) =>
+        state.completedTopics.includes(topic)
+      );
+      if (allCompleted) {
+        goTo("forward", () => {
+          state.screen = "outro";
+          state.outroSlideIndex = 0;
+        });
+      }
+      // Not all 3 topics done yet — no toast defined for this screen, silently do nothing.
+    },
+    right: () => {
+      goTo("back", () => {
+        state.completedTopics = [];
+        state.screen = "topicGrid";
+      });
+    },
+  },
+  questions: {
+    left: () => advanceQuestion(),
+    right: () => retreatQuestion(),
+  },
+  sermonPicker: {
+    left: () => {
+      if (state.selectedSermons.length < 1 || state.selectedSermons.length > 3) {
+        const t = content[state.language];
+        showToast(t.ui.sermonsLockToast);
+        return;
+      }
+      goTo("forward", () => {
+        state.screen = "outro";
+        state.outroSlideIndex = 1;
+      });
+    },
+    right: () => {
+      goTo("back", () => {
+        state.screen = "outro";
+        state.outroSlideIndex = 0;
+      });
+    },
+  },
+  outro: {
+    left: () => {
+      if (state.outroSlideIndex === 0) {
+        goTo("forward", () => {
+          state.screen = "sermonPicker";
+        });
+      } else if (state.outroSlideIndex === 1) {
+        goTo("forward", () => {
+          state.outroSlideIndex = 2;
+        });
+      } else {
+        goTo("forward", () => {
+          state.screen = "thankYou";
+        });
+      }
+    },
+    right: () => {
+      if (state.outroSlideIndex === 0) {
+        if (state.mode === "full") {
+          goTo("back", () => {
+            state.screen = "topicMenu";
+          });
+        } else {
+          const t = content[state.language];
+          goTo("back", () => {
+            state.screen = "questions";
+            state.questionIndex = t.quickQuestions.length - 1;
+          });
+        }
+      } else if (state.outroSlideIndex === 1) {
+        goTo("back", () => {
+          state.screen = "sermonPicker";
+        });
+      } else {
+        goTo("back", () => {
+          state.outroSlideIndex = 1;
+        });
+      }
+    },
+  },
+  thankYou: {
+    left: () => {},
+    right: () => {
+      goTo("back", () => {
+        state.screen = "outro";
+        state.outroSlideIndex = 2;
+      });
+    },
+  },
 };
+
+function markTopicCompleted(topic) {
+  if (!state.completedTopics.includes(topic)) {
+    state.completedTopics.push(topic);
+  }
+}
+
+function advanceQuestion() {
+  const t = content[state.language];
+
+  if (state.mode === "full") {
+    const questions = t.questions[state.currentTopic];
+    if (state.questionIndex < questions.length - 1) {
+      goTo("forward", () => {
+        state.questionIndex++;
+      });
+    } else {
+      const topic = state.currentTopic;
+      goTo("back", () => {
+        markTopicCompleted(topic);
+        state.currentTopic = null;
+        state.questionIndex = 0;
+        state.screen = "topicMenu";
+      });
+    }
+  } else if (state.questionIndex < t.quickQuestions.length - 1) {
+    goTo("forward", () => {
+      state.questionIndex++;
+    });
+  } else {
+    goTo("forward", () => {
+      state.screen = "outro";
+      state.outroSlideIndex = 0;
+    });
+  }
+}
+
+function skipCurrentTopic() {
+  const topic = state.currentTopic;
+  goTo("back", () => {
+    markTopicCompleted(topic);
+    state.currentTopic = null;
+    state.questionIndex = 0;
+    state.screen = "topicMenu";
+  });
+}
+
+function retreatQuestion() {
+  if (state.questionIndex > 0) {
+    goTo("back", () => {
+      state.questionIndex--;
+    });
+  } else if (state.mode === "full") {
+    goTo("back", () => {
+      state.currentTopic = null;
+      state.screen = "topicMenu";
+    });
+  } else {
+    goTo("back", () => {
+      state.screen = "topicGrid";
+    });
+  }
+}
 
 let toastTimeout = null;
 
@@ -96,6 +280,8 @@ function showToast(message) {
 }
 
 function handleAppClick(e) {
+  if (isTransitioning) return;
+
   const target = e.target.closest("[data-action]");
   if (!target) return;
   const action = target.dataset.action;
@@ -126,15 +312,87 @@ function handleAppClick(e) {
       return;
     }
     updateTopicPills();
+  } else if (action === "select-topic") {
+    const topic = target.dataset.topic;
+    goTo("forward", () => {
+      state.currentTopic = topic;
+      state.questionIndex = 0;
+      state.screen = "questions";
+    });
+  } else if (action === "skip-topic") {
+    const topic = target.dataset.topic;
+    markTopicCompleted(topic);
+    updateTopicMenuRow(topic);
+  } else if (action === "skip-question") {
+    skipCurrentTopic();
+  } else if (action === "set-sermon-view") {
+    const view = target.dataset.view;
+    if (state.sermonView === view) return;
+    state.sermonView = view;
+    updateSermonView();
+  } else if (action === "toggle-sermon") {
+    const sermonId = target.dataset.sermon;
+    const idx = state.selectedSermons.indexOf(sermonId);
+    if (idx !== -1) {
+      state.selectedSermons.splice(idx, 1);
+    } else if (state.selectedSermons.length < 3) {
+      state.selectedSermons.push(sermonId);
+    } else {
+      return;
+    }
+    updateSermonSelection();
   }
 }
 
 let swipeStartX = null;
 let swipeStartY = null;
+let swipeLastY = null;
+let swipeAxisLocked = false;
+let swipeIsHorizontal = false;
+let swipeScrollTarget = null;
+
+const SWIPE_DECISION_THRESHOLD = 10;
+const SWIPE_THRESHOLD = 60;
 
 function handlePointerDown(e) {
   swipeStartX = e.clientX;
   swipeStartY = e.clientY;
+  swipeLastY = e.clientY;
+  swipeAxisLocked = false;
+  swipeIsHorizontal = false;
+  // The sermon picker's focused view has touch-action:none (see screens.css)
+  // so the browser never natively scrolls it — if the gesture turns out to
+  // be vertical, we drive its scrollTop ourselves below instead.
+  swipeScrollTarget = e.target.closest(".sermon-grid--focused");
+}
+
+// Once a gesture is clearly horizontal, we preventDefault() on every further
+// move so the browser never hijacks it for native image-drag. If it's
+// vertical and started over the sermon grid, we scroll it manually — see
+// handlePointerDown for why native scroll is disabled there.
+function handlePointerMove(e) {
+  if (swipeStartX === null) return;
+
+  const deltaX = e.clientX - swipeStartX;
+  const deltaY = e.clientY - swipeStartY;
+
+  if (!swipeAxisLocked) {
+    if (Math.abs(deltaX) < SWIPE_DECISION_THRESHOLD && Math.abs(deltaY) < SWIPE_DECISION_THRESHOLD) {
+      return;
+    }
+    swipeAxisLocked = true;
+    swipeIsHorizontal = Math.abs(deltaX) > Math.abs(deltaY);
+  }
+
+  if (swipeIsHorizontal) {
+    e.preventDefault();
+  } else if (swipeScrollTarget) {
+    e.preventDefault();
+    swipeScrollTarget.scrollTop -= e.clientY - swipeLastY;
+    if (typeof updateSermonScrollIndicator === "function") updateSermonScrollIndicator();
+  }
+
+  swipeLastY = e.clientY;
 }
 
 function handlePointerUp(e) {
@@ -144,8 +402,8 @@ function handlePointerUp(e) {
   const deltaY = e.clientY - swipeStartY;
   swipeStartX = null;
   swipeStartY = null;
+  swipeScrollTarget = null;
 
-  const SWIPE_THRESHOLD = 60;
   if (Math.abs(deltaX) < SWIPE_THRESHOLD || Math.abs(deltaX) < Math.abs(deltaY)) return;
 
   const handlers = swipeHandlers[state.screen];
@@ -158,6 +416,12 @@ function handlePointerUp(e) {
   }
 }
 
+function handlePointerCancel() {
+  swipeStartX = null;
+  swipeStartY = null;
+  swipeScrollTarget = null;
+}
+
 function initNavigation() {
   const toastEl = document.createElement("div");
   toastEl.id = "toast";
@@ -166,7 +430,9 @@ function initNavigation() {
 
   document.getElementById("app").addEventListener("click", handleAppClick);
   document.addEventListener("pointerdown", handlePointerDown);
+  document.addEventListener("pointermove", handlePointerMove, { passive: false });
   document.addEventListener("pointerup", handlePointerUp);
+  document.addEventListener("pointercancel", handlePointerCancel);
 }
 
 initNavigation();

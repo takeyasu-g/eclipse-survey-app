@@ -164,6 +164,8 @@ const content = {
       quickSurveyButton: "Quick Survey",
       fullSurveyButton: "Full Survey",
       resultsButton: "View Results",
+      skipButton: "Skip",
+      skipTopicButton: "Skip Topic",
 
       languageToggle: "日本語", // shown while in EN
 
@@ -351,6 +353,8 @@ const content = {
       quickSurveyButton: "クイック調査",
       fullSurveyButton: "フル調査",
       resultsButton: "結果を見る",
+      skipButton: "スキップ",
+      skipTopicButton: "トピックをスキップ",
 
       languageToggle: "English", // shown while in JP
 

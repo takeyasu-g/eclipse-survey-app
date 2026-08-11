@@ -18,6 +18,25 @@ body,
   position: relative;
   overflow: hidden;
   touch-action: pan-y;
+  user-select: none;
+}
+
+img {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+/* Hide native scrollbars everywhere inside the app — scrolling still works,
+   but a native scrollbar is a browser-chrome widget that can swallow a
+   click-drag before it ever reaches our pointer listeners, and it doubles
+   up visually with any custom scroll indicator we draw ourselves. */
+#app * {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+#app *::-webkit-scrollbar {
+  display: none;
 }
 
 body {
