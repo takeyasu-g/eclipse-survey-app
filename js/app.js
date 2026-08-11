@@ -11,6 +11,7 @@ const state = {
   questionIndex: 0,
   currentTopic: null,      // full mode only
   results: [],             // see Results Screen section
+  resultSaved: false,      // guards against a duplicate save if the user swipes back and forth into Thank You again
   copyControlsVisible: false, // results screen — whether Copy/Copy All buttons are shown
 };
 
@@ -31,6 +32,7 @@ function resetState() {
   state.outroSlideIndex = 0;
   state.questionIndex = 0;
   state.currentTopic = null;
+  state.resultSaved = false;
   state.copyControlsVisible = false;
 }
 

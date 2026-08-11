@@ -30,6 +30,15 @@ function sermonGridIcon() {
   `;
 }
 
+function pencilIcon() {
+  return `
+    <svg class="result-entry__edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    </svg>
+  `;
+}
+
 function screenHome(state) {
   const t = content[state.language];
 
@@ -319,6 +328,78 @@ function screenThankYou(state) {
   `;
 }
 
+function screenResults(state) {
+  const t = content[state.language];
+  const copyVisible = state.copyControlsVisible;
+
+  let bodyHTML;
+  if (state.results.length === 0) {
+    bodyHTML = `<p class="results-empty">${t.ui.resultsEmpty}</p>`;
+  } else {
+    const entriesHTML = state.results
+      .map((entry, i) => {
+        const topicsText = entry.topics.map((key) => t.topics[key]).join(", ");
+        const sermonsText = entry.sermons.map((key) => t.sermons[key]).join(", ");
+
+        const copyButtonHTML = copyVisible
+          ? `<button class="result-entry__copy" data-action="copy-entry" data-index="${i}">${t.ui.copyButton}</button>`
+          : "";
+
+        return `
+          <div class="result-entry">
+            <div class="result-entry__header">
+              <span class="result-entry__name-wrap">
+                <span
+                  class="result-entry__name"
+                  contenteditable="true"
+                  spellcheck="false"
+                  onblur="commitResultName(this, ${i})"
+                  onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
+                >${entry.name}</span>
+                ${pencilIcon()}
+              </span>
+              ${copyButtonHTML}
+            </div>
+            <p class="result-entry__datetime">${entry.dateTime}</p>
+            <p class="result-entry__meta">${t.ui.topicsLabel} ${topicsText}</p>
+            <p class="result-entry__meta">${t.ui.sermonsLabel} ${sermonsText}</p>
+          </div>
+        `;
+      })
+      .join("");
+
+    bodyHTML = `<div class="results-list">${entriesHTML}</div>`;
+  }
+
+  const copyAllHTML = copyVisible
+    ? `<button class="copy-all-button" data-action="copy-all">${t.ui.copyAllButton}</button>`
+    : "";
+
+  return `
+    <div class="screen screen-results">
+      <div class="top-bar">
+        ${homeIconButton()}
+        <div class="results-top-actions">
+          ${copyAllHTML}
+          <button class="copy-toggle ${copyVisible ? "active" : ""}" data-action="toggle-copy-controls">${t.ui.copyButton}</button>
+        </div>
+      </div>
+      <h1 class="results-title">${t.ui.resultsTitle}</h1>
+      ${bodyHTML}
+    </div>
+  `;
+}
+
+function commitResultName(el, index) {
+  const newName = el.textContent.trim();
+  const entry = state.results[index];
+  if (entry && newName) {
+    entry.name = newName;
+  } else if (entry) {
+    el.textContent = entry.name;
+  }
+}
+
 function updateSermonView() {
   if (!currentScreenEl) return;
 
@@ -399,6 +480,7 @@ const screenFunctions = {
   sermonPicker: screenSermonPicker,
   outro: screenOutro,
   thankYou: screenThankYou,
+  results: screenResults,
 };
 
 function getScreenHTML(state) {

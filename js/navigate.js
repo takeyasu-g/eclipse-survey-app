@@ -164,6 +164,10 @@ const swipeHandlers = {
         });
       } else {
         goTo("forward", () => {
+          if (!state.resultSaved) {
+            saveResult();
+            state.resultSaved = true;
+          }
           state.screen = "thankYou";
         });
       }
@@ -201,7 +205,27 @@ const swipeHandlers = {
       });
     },
   },
+  results: {
+    left: () => {},
+    right: () => {},
+  },
 };
+
+// A single shared counter, in completion order — derived from state.results
+// itself (not a separate variable) so it can never drift out of sync and
+// naturally survives Home resets, since state.results does too.
+function saveResult() {
+  const number = state.results.length + 1;
+  const modeLabel = state.mode === "full" ? "Full" : "Quick";
+
+  state.results.push({
+    name: `${modeLabel} Survey ${number}`,
+    dateTime: new Date().toLocaleString(),
+    mode: state.mode,
+    topics: [...state.selectedTopics],
+    sermons: [...state.selectedSermons],
+  });
+}
 
 function markTopicCompleted(topic) {
   if (!state.completedTopics.includes(topic)) {
@@ -341,7 +365,57 @@ function handleAppClick(e) {
       return;
     }
     updateSermonSelection();
+  } else if (action === "view-results") {
+    goTo("forward", () => {
+      state.screen = "results";
+    });
+  } else if (action === "toggle-copy-controls") {
+    state.copyControlsVisible = !state.copyControlsVisible;
+    render();
+  } else if (action === "copy-all") {
+    copyAllResults();
+  } else if (action === "copy-entry") {
+    const index = Number(target.dataset.index);
+    copyResultEntry(index);
   }
+}
+
+function formatResultEntry(entry) {
+  const t = content[state.language];
+  const modeLabel = entry.mode === "full" ? t.ui.fullSurveyButton : t.ui.quickSurveyButton;
+  const topicsText = entry.topics.map((key) => t.topics[key]).join(", ");
+  const sermonsText = entry.sermons.map((key) => t.sermons[key]).join(", ");
+
+  return [
+    entry.name,
+    entry.dateTime,
+    modeLabel,
+    `${t.ui.topicsLabel} ${topicsText}`,
+    `${t.ui.sermonsLabel} ${sermonsText}`,
+  ].join("\n");
+}
+
+function copyTextToClipboard(text) {
+  navigator.clipboard
+    .writeText(text)
+    .then(() => {
+      const t = content[state.language];
+      showToast(t.ui.copyConfirm);
+    })
+    .catch((err) => {
+      console.error("Clipboard write failed:", err);
+    });
+}
+
+function copyResultEntry(index) {
+  const entry = state.results[index];
+  if (!entry) return;
+  copyTextToClipboard(formatResultEntry(entry));
+}
+
+function copyAllResults() {
+  const text = state.results.map(formatResultEntry).join("\n\n");
+  copyTextToClipboard(text);
 }
 
 let swipeStartX = null;
