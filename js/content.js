@@ -112,22 +112,22 @@ const content = {
         "What do you think love is?",
         "What mission do you think God has given you?",
       ],
-      quickQuestions: [
-        { text: "What's an experience that moved you to tears?" },
-        { text: "What's a moment where you felt love?" },
-        { text: "What's the hardest thing you've ever gone through?" },
-        { text: "What do you feel God has given you?" },
-        {
-          text: "Do you ever feel contradictions in your heart?",
-          examples: [
-            "I have things to do but keep putting them off",
-            "I want to be glad for others' success but end up jealous",
-            "I want to be honest but end up covering things up",
-            "I want to take care of my health but can't stop",
-          ],
-        },
-      ],
     },
+    quickQuestions: [
+      { text: "What's an experience that moved you to tears?" },
+      { text: "What's a moment where you felt love?" },
+      { text: "What's the hardest thing you've ever gone through?" },
+      { text: "What do you feel God has given you?" },
+      {
+        text: "Do you ever feel contradictions in your heart?",
+        examples: [
+          "I have things to do but keep putting them off",
+          "I want to be glad for others' success but end up jealous",
+          "I want to be honest but end up covering things up",
+          "I want to take care of my health but can't stop",
+        ],
+      },
+    ],
     outroSlides: [
       {
         type: "closer",
@@ -159,6 +159,26 @@ const content = {
       freedom: "What is Real Freedom?",
       environment: "Environmental Issues",
       everything: "Everything Happens for a Reason",
+    },
+    ui: {
+      quickSurveyButton: "Quick Survey",
+      fullSurveyButton: "Full Survey",
+      resultsButton: "View Results",
+
+      languageToggle: "日本語", // shown while in EN
+
+      endTitle: "Thank You",
+      endBody: "Thank you for taking the time to talk with us today.",
+
+      resultsTitle: "Results",
+      resultsEmpty: "No surveys completed yet.",
+      copyAllButton: "Copy All",
+      copyButton: "Copy",
+      copyConfirm: "Copied!",
+      topicsLabel: "Topics:",
+      sermonsLabel: "Sermons:",
+      topicsLockToast: "Select 3 topics to continue",
+      sermonsLockToast: "Select 1–3 sermons to continue",
     },
   },
   JP: {
@@ -274,22 +294,22 @@ const content = {
         "愛とは何だと思いますか？",
         "神様がくれている使命は何だと思いますか？",
       ],
-      quickQuestions: [
-        { text: "涙が流れるほど感動した経験は何ですか？" },
-        { text: "愛を感じた出来事は何ですか？" },
-        { text: "今まで一番苦労したことは何ですか？" },
-        { text: "神様からもらったものは何ですか？" },
-        {
-          text: "心に矛盾を感じることはありますか？",
-          examples: [
-            "やるべきことがあるのに先延ばしにしてしまう",
-            "人の成功を喜びたいのに嫉妬してしまう",
-            "正直でいたいのに誤魔化してしまう",
-            "健康のために節制したいのにやめられない",
-          ],
-        },
-      ],
     },
+    quickQuestions: [
+      { text: "涙が流れるほど感動した経験は何ですか？" },
+      { text: "愛を感じた出来事は何ですか？" },
+      { text: "今まで一番苦労したことは何ですか？" },
+      { text: "神様からもらったものは何ですか？" },
+      {
+        text: "心に矛盾を感じることはありますか？",
+        examples: [
+          "やるべきことがあるのに先延ばしにしてしまう",
+          "人の成功を喜びたいのに嫉妬してしまう",
+          "正直でいたいのに誤魔化してしまう",
+          "健康のために節制したいのにやめられない",
+        ],
+      },
+    ],
     outroSlides: [
       // Outro 1 — closer with tagline
       {
@@ -326,6 +346,26 @@ const content = {
       freedom: "本当の自由とは？",
       environment: "環境問題編",
       everything: "すべての物には意味がある",
+    },
+    ui: {
+      quickSurveyButton: "クイック調査",
+      fullSurveyButton: "フル調査",
+      resultsButton: "結果を見る",
+
+      languageToggle: "English", // shown while in JP
+
+      endTitle: "ありがとうございました",
+      endBody: "本日はお時間をいただき、ありがとうございました。",
+
+      resultsTitle: "結果",
+      resultsEmpty: "まだ調査結果がありません。",
+      copyAllButton: "すべてコピー",
+      copyButton: "コピー",
+      copyConfirm: "コピーしました！",
+      topicsLabel: "トピック:",
+      sermonsLabel: "メッセージ:",
+      topicsLockToast: "3つのトピックを選んでください",
+      sermonsLockToast: "メッセージを1〜3つ選んでください",
     },
   },
 };
