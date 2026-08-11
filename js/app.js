@@ -16,12 +16,20 @@ const state = {
 
 function render() {
   const app = document.getElementById("app");
-  const screenFunctions = {
-    home: screenHome,
-  };
+  app.innerHTML = getScreenHTML(state);
+}
 
-  const screenFn = screenFunctions[state.screen];
-  app.innerHTML = screenFn(state);
+function resetState() {
+  state.mode = null;
+  state.selectedTopics = [];
+  state.completedTopics = [];
+  state.selectedSermons = [];
+  state.sermonView = "focused";
+  state.introSlideIndex = 0;
+  state.outroSlideIndex = 0;
+  state.questionIndex = 0;
+  state.currentTopic = null;
+  state.copyControlsVisible = false;
 }
 
 render();

@@ -14,6 +14,12 @@ body,
   width: 100%;
 }
 
+#app {
+  position: relative;
+  overflow: hidden;
+  touch-action: pan-y;
+}
+
 body {
   font-family: "M PLUS Rounded 1c", sans-serif;
   -webkit-tap-highlight-color: transparent;
