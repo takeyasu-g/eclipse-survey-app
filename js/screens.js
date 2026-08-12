@@ -39,12 +39,9 @@ function pencilIcon() {
   `;
 }
 
-// Only cloud, star, block — no eraser. Cloud is both heavily weighted
-// (via repeated "cloud" entries below) and sized much larger than star/block.
+// Clouds only.
 const DECO_ICON_CONFIG = [
-  { icon: "cloud", file: "deco-cloud.png", weight: 6, sizeMin: 165, sizeMax: 285 },
-  { icon: "star", file: "deco-star.png", weight: 1, sizeMin: 28, sizeMax: 48 },
-  { icon: "block", file: "deco-block.png", weight: 1, sizeMin: 28, sizeMax: 48 },
+  { icon: "cloud", file: "deco-cloud.png", weight: 1, sizeMin: 165, sizeMax: 285 },
 ];
 
 const DECO_ICON_POOL = DECO_ICON_CONFIG.flatMap((cfg) => Array(cfg.weight).fill(cfg));

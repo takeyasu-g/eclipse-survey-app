@@ -510,9 +510,13 @@
   border: 3px solid #000;
 }
 
+/* Green rather than orange — orange sat too close to the beige paper
+   background to read as a state change. Green also already means
+   "selected/done" elsewhere in the app (completed topics). */
 .sermon-poster--selected .sermon-poster__image-wrap {
-  border-color: #ffa500;
+  border-color: #16a34a;
   border-width: 5px;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.35);
 }
 
 .sermon-poster img {
