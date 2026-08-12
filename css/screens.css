@@ -5,22 +5,67 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 24px;
-  background: #f5f0e1;
+  padding: 14px 20px;
+  background-color: #f3ecd8;
+  background-image: linear-gradient(rgba(120, 108, 78, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120, 108, 78, 0.12) 1px, transparent 1px);
+  background-size: 28px 28px;
+  /* Contains the deco-layer's negative z-index to inside this screen's own
+     box, so it paints above THIS screen's background instead of escaping
+     and painting behind it (position:absolute alone doesn't create a local
+     stacking context without an explicit z-index or isolation). */
+  isolation: isolate;
 }
 
+/* Sparse decorative icon layer — behind everything else. A NEGATIVE
+   z-index is required here: z-index:0 (or any explicit non-auto value)
+   actually paints AFTER normal in-flow siblings that have no z-index at
+   all, so it was rendering on top of real content, not behind it. Negative
+   z-index is the one value guaranteed to paint strictly behind. */
+.deco-layer {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.deco-icon {
+  position: absolute;
+  opacity: 0.85;
+}
+
+/* Floats over the content instead of reserving its own row — the main
+   content of every screen gets the full available height, and the home
+   icon (plus any per-screen icons like the sermon view toggles) just sit
+   on top of it in the corners. pointer-events:none on the row lets clicks
+   pass through the empty space between the buttons; the buttons themselves
+   opt back in. */
 .top-bar {
+  position: absolute;
+  top: 14px;
+  left: 20px;
+  right: 20px;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  pointer-events: none;
+}
+
+.top-bar > * {
+  pointer-events: auto;
 }
 
 .icon-button {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: rgba(255, 255, 255, 0.85);
+  border: 2px solid #000;
+  border-radius: 10px;
 }
 
 .icon-button svg {
@@ -29,7 +74,7 @@
 }
 
 .lang-toggle {
-  padding: 8px 16px;
+  padding: 6px 14px;
   border-radius: 999px;
   background: #fff;
   border: 1px solid #000;
@@ -107,13 +152,26 @@
 }
 
 /* Topic grid */
-.topic-grid {
+.topic-grid-prompt {
+  text-align: center;
+  font-size: 1.9rem;
+  font-weight: 700;
+  margin-top: 50px;
+}
+
+.topic-grid-area {
   flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.topic-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
   gap: 16px;
-  align-content: center;
+  width: 100%;
+  max-width: 720px;
 }
 
 .topic-pill {
@@ -121,6 +179,7 @@
   border: 2px solid #000;
   border-radius: 999px;
   font-size: 1.1rem;
+  padding: 18px 16px;
   transition: opacity 0.2s ease;
 }
 
@@ -137,6 +196,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: center;
   gap: 20px;
 }
@@ -145,16 +205,18 @@
   display: flex;
   align-items: center;
   gap: 16px;
+  width: 100%;
+  max-width: 460px;
 }
 
 .topic-menu-button {
   flex: 1;
-  padding: 16px 24px;
+  padding: 14px 22px;
   border-radius: 999px;
   background: #ffcc4d;
   border: 2px solid #000;
-  font-size: 1.1rem;
-  text-align: left;
+  font-size: 1.05rem;
+  text-align: center;
 }
 
 .topic-menu-row--completed .topic-menu-button {
@@ -176,7 +238,7 @@
 
 .question-topic-pill {
   align-self: center;
-  margin-top: 8px;
+  margin-top: 50px;
   padding: 10px 28px;
   border-radius: 999px;
   background: #ffcc4d;
@@ -233,59 +295,90 @@
   background: #ffe08a;
 }
 
-/* The grid's row height always comes from real available flex space (never
-   a guessed ratio), so it's guaranteed to fit any device. Each poster's
-   WIDTH is then derived from that real row height via a strict 2:3 aspect
-   ratio, so posters are always genuinely portrait and never get cropped. */
 .sermon-grid-area {
   position: relative;
   flex: 1;
   min-height: 0;
-  margin-top: 12px;
+  margin-top: 0;
   padding-right: 16px;
 }
 
 .sermon-grid {
-  height: 100%;
   display: grid;
   gap: 10px;
   overflow-x: hidden;
 }
 
-/* touch-action:none opts this element OUT of native touch scrolling
-   entirely — JS drives its scrollTop directly (see handlePointerMove in
-   navigate.js), so there's no native gesture left for the browser to
-   contest with our custom left/right swipe-to-navigate gesture. */
+/* Poster size is computed in JS (sizeSermonPosters, navigate.js) from the
+   grid's actual measured width/height and written here as a custom
+   property — CSS aspect-ratio combined with flex-grow and max-width kept
+   resolving inconsistently across viewport sizes, so this makes the size
+   an explicit, unambiguous pixel value instead of letting the browser
+   infer it. touch-action:none on the focused grid opts it OUT of native
+   touch scrolling — JS drives its scrollTop directly (see handlePointerMove
+   in navigate.js) so there's no native gesture left to contest with our
+   custom left/right swipe-to-navigate gesture. */
 .sermon-grid--focused {
+  height: 100%;
   grid-template-columns: repeat(3, 1fr);
-  grid-auto-rows: 100%;
+  grid-auto-rows: auto;
+  align-content: start;
   overflow-y: auto;
   touch-action: none;
   justify-items: center;
 }
 
+/* Grid view uses no JS sizing at all — every cell is identical by
+   construction (equal 1fr columns/rows), the title is hard-capped to 2
+   lines so its height is always a known fixed value, and the image takes
+   flex:1 (whatever's left in the fixed-height cell) — which mathematically
+   cannot overflow its container. padding-top clears the floating top-bar
+   icons, which the fixed 2-row layout can't scroll past the way focused
+   view can. */
 .sermon-grid--grid {
+  height: 100%;
+  padding-top: 50px;
   grid-template-columns: repeat(6, 1fr);
   grid-template-rows: repeat(2, 1fr);
+  gap: 6px;
   justify-items: center;
   overflow: hidden;
 }
 
-.sermon-poster {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.sermon-grid--grid .sermon-poster {
   height: 100%;
   min-height: 0;
-  gap: 4px;
-  text-align: center;
+  justify-content: flex-start;
 }
 
-.sermon-poster__image-wrap {
+/* flex:1 gives the image whatever height is left in the fixed-height cell,
+   and aspect-ratio derives the width from that height — so the poster stays
+   a true 2:3 portrait and is never cropped. Because the title below is a
+   FIXED two-line height, "whatever is left" is identical for all 12, which
+   is what keeps them the same size and aligned. */
+.sermon-grid--grid .sermon-poster__image-wrap {
   flex: 1;
   min-height: 0;
   width: auto;
   max-width: 100%;
+  aspect-ratio: 2 / 3;
+}
+
+/* The poster fills its full grid column (wider than the image itself), so
+   the title below can wrap across that fuller width instead of being
+   squeezed to the narrower image width — it still can't collide with the
+   next poster's title since it's bounded by its own grid column. */
+.sermon-poster {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  gap: 6px;
+  text-align: center;
+}
+
+.sermon-poster__image-wrap {
+  width: var(--sermon-poster-width, 100%);
   aspect-ratio: 2 / 3;
   overflow: hidden;
   border-radius: 8px;
@@ -306,12 +399,27 @@
 }
 
 .sermon-poster__title {
+  width: 100%;
   flex: 0 0 auto;
-  font-size: 0.85rem;
+  font-family: "Potta One", "M PLUS Rounded 1c", sans-serif;
+  font-weight: 400;
+  font-size: 1.8rem;
+  line-height: 1.2;
+  color: #1d4ed8;
 }
 
+/* Always exactly two lines tall, whether the title wraps to one line or
+   two — a one-line title leaves the second line blank rather than making
+   its poster taller than the others. This fixed height is what guarantees
+   all 12 images end up identically sized and aligned. */
 .sermon-grid--grid .sermon-poster__title {
-  font-size: 0.65rem;
+  font-size: 0.85rem;
+  height: 2.4em; /* 2 lines x line-height 1.2 */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* Scroll indicator — always visible (not the native scrollbar, which most
@@ -425,7 +533,7 @@
 
 .results-title {
   font-size: 1.4rem;
-  margin-top: 8px;
+  margin-top: 50px;
 }
 
 .results-empty {

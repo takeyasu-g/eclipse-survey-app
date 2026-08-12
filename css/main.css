@@ -41,11 +41,19 @@ img {
 
 body {
   font-family: "M PLUS Rounded 1c", sans-serif;
+  font-weight: 400;
   -webkit-tap-highlight-color: transparent;
 }
 
+h1,
+h2,
+h3,
 button {
   font-family: inherit;
+  font-weight: 700;
+}
+
+button {
   border: none;
   background: none;
   cursor: pointer;
@@ -98,5 +106,12 @@ button {
   font-family: "M PLUS Rounded 1c";
   src: url("../assets/fonts/M_PLUS_Rounded_1c/MPLUSRounded1c-Black.ttf") format("truetype");
   font-weight: 900;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Potta One";
+  src: url("../assets/fonts/Potta_One/PottaOne-Regular.ttf") format("truetype");
+  font-weight: 400;
   font-style: normal;
 }

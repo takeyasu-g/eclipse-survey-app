@@ -1,6 +1,14 @@
 let isTransitioning = false;
 let currentScreenEl = null;
 
+// The client asked to drop the suicide-stats and mental-illness intro
+// slides from the flow entirely (both survey modes). The data stays in
+// content.js and the image assets stay in assets/images/ in case they're
+// wanted back later — this constant is the only thing that actually
+// removes them from navigation, capping the usable slides to the first 2
+// (title, who-we-are) regardless of how many entries introSlides has.
+const INTRO_SLIDE_COUNT = 2;
+
 function goTo(direction, mutateFn) {
   if (isTransitioning) return;
 
@@ -62,8 +70,7 @@ const swipeHandlers = {
   },
   intro: {
     left: () => {
-      const t = content[state.language];
-      if (state.introSlideIndex < t.introSlides.length - 1) {
+      if (state.introSlideIndex < INTRO_SLIDE_COUNT - 1) {
         goTo("forward", () => {
           state.introSlideIndex++;
         });
@@ -102,10 +109,9 @@ const swipeHandlers = {
       }
     },
     right: () => {
-      const t = content[state.language];
       goTo("back", () => {
         state.screen = "intro";
-        state.introSlideIndex = t.introSlides.length - 1;
+        state.introSlideIndex = INTRO_SLIDE_COUNT - 1;
       });
     },
   },

@@ -181,6 +181,7 @@ const content = {
       sermonsLabel: "Sermons:",
       topicsLockToast: "Select 3 topics to continue",
       sermonsLockToast: "Select 1–3 sermons to continue",
+      topicGridPrompt: "What matters most to you?",
     },
   },
   JP: {
@@ -370,6 +371,7 @@ const content = {
       sermonsLabel: "メッセージ:",
       topicsLockToast: "3つのトピックを選んでください",
       sermonsLockToast: "メッセージを1〜3つ選んでください",
+      topicGridPrompt: "重要だと思うものはありますか？",
     },
   },
 };

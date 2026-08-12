@@ -39,11 +39,51 @@ function pencilIcon() {
   `;
 }
 
+// Only cloud, star, block — no eraser. Cloud is both heavily weighted
+// (via repeated "cloud" entries below) and sized much larger than star/block.
+const DECO_ICON_CONFIG = [
+  { icon: "cloud", file: "deco-cloud.png", weight: 6, sizeMin: 165, sizeMax: 285 },
+  { icon: "star", file: "deco-star.png", weight: 1, sizeMin: 28, sizeMax: 48 },
+  { icon: "block", file: "deco-block.png", weight: 1, sizeMin: 28, sizeMax: 48 },
+];
+
+const DECO_ICON_POOL = DECO_ICON_CONFIG.flatMap((cfg) => Array(cfg.weight).fill(cfg));
+
+// Peripheral corner/edge zones only — deliberately avoids the center of the
+// screen, where every screen's actual interactive content lives.
+const DECO_ZONES = [
+  { top: [4, 13], left: [3, 12] },
+  { top: [4, 13], left: [80, 92] },
+  { top: [76, 88], left: [3, 12] },
+  { top: [76, 88], left: [80, 92] },
+  { top: [4, 10], left: [42, 55] },
+  { top: [84, 90], left: [42, 55] },
+];
+
+function decorativeScatterHTML(count = 5) {
+  const zones = [...DECO_ZONES].sort(() => Math.random() - 0.5).slice(0, count);
+
+  const iconsHTML = zones
+    .map((zone) => {
+      const cfg = DECO_ICON_POOL[Math.floor(Math.random() * DECO_ICON_POOL.length)];
+      const top = zone.top[0] + Math.random() * (zone.top[1] - zone.top[0]);
+      const left = zone.left[0] + Math.random() * (zone.left[1] - zone.left[0]);
+      const size = cfg.sizeMin + Math.random() * (cfg.sizeMax - cfg.sizeMin);
+      const rotate = Math.random() * 36 - 18;
+
+      return `<img class="deco-icon" src="assets/icons/${cfg.file}" alt="" style="top:${top.toFixed(1)}%; left:${left.toFixed(1)}%; width:${size.toFixed(0)}px; transform: rotate(${rotate.toFixed(0)}deg);" />`;
+    })
+    .join("");
+
+  return `<div class="deco-layer">${iconsHTML}</div>`;
+}
+
 function screenHome(state) {
   const t = content[state.language];
 
   return `
     <div class="screen screen-home">
+      ${decorativeScatterHTML()}
       <div class="top-bar">
         ${homeIconButton()}
         <button class="lang-toggle" data-action="toggle-language">${t.ui.languageToggle}</button>
@@ -116,6 +156,7 @@ function screenIntro(state) {
 
   return `
     <div class="screen screen-intro">
+      ${decorativeScatterHTML()}
       <div class="top-bar">${homeIconButton()}</div>
       ${slideHTML}
     </div>
@@ -140,8 +181,12 @@ function screenTopicGrid(state) {
 
   return `
     <div class="screen screen-topic-grid">
+      ${decorativeScatterHTML()}
       <div class="top-bar">${homeIconButton()}</div>
-      <div class="topic-grid">${pillsHTML}</div>
+      <p class="topic-grid-prompt">${t.ui.topicGridPrompt}</p>
+      <div class="topic-grid-area">
+        <div class="topic-grid">${pillsHTML}</div>
+      </div>
     </div>
   `;
 }
@@ -169,6 +214,7 @@ function screenTopicMenu(state) {
 
   return `
     <div class="screen screen-topic-menu">
+      ${decorativeScatterHTML()}
       <div class="top-bar">${homeIconButton()}</div>
       <div class="topic-menu-list">${rowsHTML}</div>
     </div>
@@ -205,6 +251,7 @@ function screenQuestions(state) {
 
   return `
     <div class="screen screen-questions">
+      ${decorativeScatterHTML()}
       <div class="top-bar">${homeIconButton()}</div>
       ${topicPillHTML}
       <div class="question-body">
@@ -242,6 +289,7 @@ function screenSermonPicker(state) {
 
   return `
     <div class="screen screen-sermon-picker">
+      ${decorativeScatterHTML()}
       <div class="top-bar">
         ${homeIconButton()}
         <div class="sermon-view-toggles">
@@ -308,6 +356,7 @@ function screenOutro(state) {
 
   return `
     <div class="screen screen-outro">
+      ${decorativeScatterHTML()}
       <div class="top-bar">${homeIconButton()}</div>
       ${slideHTML}
     </div>
@@ -319,6 +368,7 @@ function screenThankYou(state) {
 
   return `
     <div class="screen screen-thank-you">
+      ${decorativeScatterHTML()}
       <div class="top-bar">${homeIconButton()}</div>
       <div class="thank-you-content">
         <h1>${t.ui.endTitle}</h1>
@@ -377,6 +427,7 @@ function screenResults(state) {
 
   return `
     <div class="screen screen-results">
+      ${decorativeScatterHTML()}
       <div class="top-bar">
         ${homeIconButton()}
         <div class="results-top-actions">
@@ -418,7 +469,56 @@ function updateSermonView() {
   const indicator = currentScreenEl.querySelector(".sermon-scroll-indicator");
   if (indicator) indicator.classList.toggle("sermon-scroll-indicator--hidden", !isFocused);
 
+  sizeSermonPosters();
   if (isFocused) updateSermonScrollIndicator();
+}
+
+// Computes poster size explicitly from real measured space instead of
+// relying on CSS aspect-ratio + flex-grow + max-width, which kept
+// resolving inconsistently (posters either overflowing the viewport or
+// leaving dead space) across different available heights. Focused view
+// must show ~1 row within the visible area; grid view must fit both rows
+// with zero scroll — both computed the same way, just with different
+// column/row counts.
+// Only focused view needs this. Grid view sizes itself purely in CSS now —
+// every cell is identical by construction (equal 1fr columns/rows), the
+// title is hard-capped to 2 lines (a fixed, known height), and the poster
+// image takes flex:1 (whatever's left), which can't overflow its cell by
+// definition. That's simpler and more robust than computing/measuring a
+// width for it here ever was.
+function sizeSermonPosters() {
+  if (!currentScreenEl) return;
+
+  const grid = currentScreenEl.querySelector(".sermon-grid--focused");
+  if (!grid) return;
+
+  const columns = 3;
+  const rows = 1;
+  const gap = 10;
+
+  const areaWidth = grid.clientWidth;
+  const areaHeight = grid.clientHeight;
+  if (areaWidth <= 0 || areaHeight <= 0) return;
+
+  // How tall CJK titles actually wrap to depends on font size, column
+  // width, and string length all at once — too unpredictable to guess a
+  // fixed allowance for. The title's width is already fixed at 100% of its
+  // column by CSS regardless of --sermon-poster-width, so measuring its
+  // real rendered height here is accurate before we've even computed the
+  // poster width.
+  let maxTitleHeight = 0;
+  grid.querySelectorAll(".sermon-poster__title").forEach((title) => {
+    maxTitleHeight = Math.max(maxTitleHeight, title.offsetHeight);
+  });
+  const titleGap = 6; // matches .sermon-poster's own gap
+  const titleAllowance = maxTitleHeight > 0 ? maxTitleHeight + titleGap : 110;
+
+  const columnWidth = (areaWidth - gap * (columns - 1)) / columns;
+  const rowHeight = (areaHeight - gap * (rows - 1)) / rows;
+  const widthFromHeight = (rowHeight - titleAllowance) * (2 / 3);
+
+  const posterWidth = Math.max(20, Math.min(columnWidth, widthFromHeight));
+  grid.style.setProperty("--sermon-poster-width", `${posterWidth}px`);
 }
 
 function updateSermonSelection() {
@@ -451,7 +551,19 @@ function updateSermonScrollIndicator() {
 
 function afterScreenMount() {
   if (state.screen === "sermonPicker") {
+    sizeSermonPosters();
     updateSermonScrollIndicator();
+
+    // Titles use a custom web font (Potta One). If it hasn't finished
+    // loading yet, the browser measures the fallback font's wrapped
+    // height instead — wrong, since Potta One wraps CJK text differently —
+    // so re-measure once the real font is confirmed loaded.
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => {
+        sizeSermonPosters();
+        updateSermonScrollIndicator();
+      });
+    }
   }
 }
 
