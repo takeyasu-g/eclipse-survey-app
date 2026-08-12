@@ -9,7 +9,7 @@
  * If you DON'T bump it, returning users keep being served the old cached
  * files forever and will never see your changes.
  */
-const CACHE_NAME = "eclipse-cache-v3";
+const CACHE_NAME = "eclipse-cache-v4";
 
 /*
  * Paths are relative ("./...") on purpose — this app is served from a
