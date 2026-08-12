@@ -1,0 +1,63 @@
+/* Install prompt popup. Separate file so the app's own stylesheets stay
+   untouched by PWA chrome. */
+
+.pwa-prompt {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.pwa-prompt__card {
+  width: 100%;
+  max-width: 460px;
+  padding: 24px 28px;
+  border: 2px solid #000;
+  border-radius: 16px;
+  background: #f3ecd8;
+  text-align: center;
+}
+
+.pwa-prompt__title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.pwa-prompt__body {
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.pwa-prompt__actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.pwa-prompt__button {
+  padding: 10px 24px;
+  border: 2px solid #000;
+  border-radius: 999px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.pwa-prompt__button--primary {
+  background: #ffcc4d;
+}
+
+.pwa-prompt__button:active {
+  background-color: #cfcfcf;
+  transform: scale(0.95);
+}
