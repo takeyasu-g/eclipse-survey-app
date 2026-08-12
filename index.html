@@ -9,6 +9,14 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
+    <!-- iOS auto-detects phone numbers, dates, addresses and emails and turns
+         them into blue tappable links. The results screen's timestamps get
+         caught by this — disable it app-wide. -->
+    <meta
+      name="format-detection"
+      content="telephone=no, date=no, address=no, email=no"
+    />
+
     <title>ECLIPSE</title>
 
     <link rel="manifest" href="manifest.json" />
@@ -28,6 +36,23 @@
   </head>
   <body>
     <div id="app"></div>
+
+    <!-- iOS/WebKit ignores the manifest's "orientation" field entirely and
+         has no orientation-lock API, so landscape can't actually be enforced
+         there. This overlay blocks portrait instead. It only ever appears in
+         the installed app: the gate replaces document.body wholesale, so it's
+         gone on the gate page (which must work in either orientation). -->
+    <div class="rotate-notice">
+      <div class="rotate-notice__inner">
+        <div class="rotate-notice__icon">⟲</div>
+        <p class="rotate-notice__jp">画面を横向きにしてください</p>
+        <p class="rotate-notice__en">Please rotate your device to landscape</p>
+        <p class="rotate-notice__hint">
+          回転しない場合は、画面の向きのロックを解除してください<br />
+          If it won't rotate, turn off your device's rotation lock
+        </p>
+      </div>
+    </div>
 
     <!-- Only the gate loads here. It checks whether the app is running
          installed and, if so, injects content.js / screens.js / navigate.js /

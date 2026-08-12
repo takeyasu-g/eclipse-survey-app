@@ -54,16 +54,25 @@ function isChromeBrowser() {
   return claimsChrome && !isOtherBrowser;
 }
 
-function isIosSafari() {
+// Any browser on iOS/iPadOS. beforeinstallprompt never fires on ANY of them
+// (they're all WebKit), so they all need manual instructions — but the menus
+// differ per browser, so isIosBrowser() below picks the right wording.
+function isIos() {
   const ua = window.navigator.userAgent;
-  const isIos = /iphone|ipad|ipod/i.test(ua);
+  const iphone = /iphone|ipad|ipod/i.test(ua);
   // iPadOS 13+ identifies as a Mac; the touch-point count separates it from
   // an actual desktop Mac.
-  const isIpadOs = /macintosh/i.test(ua) && navigator.maxTouchPoints > 1;
-  // Chrome/Firefox/Edge on iOS cannot install PWAs at all, so only real
-  // Safari should be given Add-to-Home-Screen instructions.
-  const isRealSafari = !/crios|fxios|edgios|opios/i.test(ua);
-  return (isIos || isIpadOs) && isRealSafari;
+  const ipadOs = /macintosh/i.test(ua) && navigator.maxTouchPoints > 1;
+  return iphone || ipadOs;
+}
+
+// Which iOS browser — the Share button's location and the path to
+// "Add to Home Screen" differ between Safari and Chrome.
+function iosBrowserKind() {
+  const ua = window.navigator.userAgent;
+  if (/crios/i.test(ua)) return "iosChromeBody";
+  if (/fxios|edgios|opios/i.test(ua)) return "iosOtherBody";
+  return "iosSafariBody";
 }
 
 /* ---------- Booting the real app ---------- */
@@ -102,9 +111,17 @@ const GATE_TEXT = {
     jp: "下のボタンからホーム画面に追加してください。",
     en: "Add it to your home screen using the button below.",
   },
-  iosBody: {
-    jp: "共有ボタンをタップして「ホーム画面に追加」を選んでください。",
-    en: "Tap the Share icon, then choose “Add to Home Screen”.",
+  iosSafariBody: {
+    jp: "画面下のツールバーにある共有ボタン（□に↑）をタップし、下にスクロールして「ホーム画面に追加」を選んでください。",
+    en: "Tap the Share icon (□ with ↑) in the toolbar at the bottom, scroll down, then tap “Add to Home Screen”.",
+  },
+  iosChromeBody: {
+    jp: "右上の共有ボタンをタップし、「その他」または下へスクロールして「ホーム画面に追加」を選んでください。",
+    en: "Tap the Share icon at the top right, then tap “More options” / scroll down and choose “Add to Home Screen”.",
+  },
+  iosOtherBody: {
+    jp: "ブラウザの共有メニューを開き、「ホーム画面に追加」を探してください。Safari を使うと簡単です。",
+    en: "Open your browser's Share menu and look for “Add to Home Screen”. Using Safari is easiest.",
   },
   installButton: {
     jp: "インストール",
@@ -139,14 +156,14 @@ function line(key) {
 }
 
 function renderGate() {
-  const ios = isIosSafari();
+  const ios = isIos();
 
   document.body.innerHTML = `
     <div class="gate">
       <div class="gate__card">
         <h1 class="gate__brand">ECLIPSE</h1>
         ${line("headline")}
-        ${ios ? line("iosBody") : line("androidBody")}
+        ${ios ? line(iosBrowserKind()) : line("androidBody")}
         ${
           ios
             ? ""

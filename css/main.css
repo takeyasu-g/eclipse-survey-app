@@ -36,6 +36,57 @@ img {
   user-select: none;
 }
 
+/* Portrait blocker — the only way to enforce landscape on iOS, which ignores
+   the manifest's orientation field and offers no lock API. On Android the OS
+   honours the manifest and locks landscape, so this never appears there. */
+.rotate-notice {
+  display: none;
+}
+
+@media (orientation: portrait) {
+  .rotate-notice {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: calc(env(safe-area-inset-top) + 24px) calc(env(safe-area-inset-right) + 24px)
+      calc(env(safe-area-inset-bottom) + 24px) calc(env(safe-area-inset-left) + 24px);
+    background-color: #f3ecd8;
+    background-image: linear-gradient(rgba(120, 108, 78, 0.12) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(120, 108, 78, 0.12) 1px, transparent 1px);
+    background-size: 28px 28px;
+    text-align: center;
+  }
+}
+
+.rotate-notice__icon {
+  font-size: 3.5rem;
+  line-height: 1;
+  margin-bottom: 18px;
+}
+
+.rotate-notice__jp {
+  font-size: 1.3rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.rotate-notice__en {
+  font-size: 1rem;
+  color: #555;
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+.rotate-notice__hint {
+  margin-top: 18px;
+  font-size: 0.82rem;
+  color: #777;
+  line-height: 1.6;
+}
+
 /* Hide native scrollbars everywhere inside the app — scrolling still works,
    but a native scrollbar is a browser-chrome widget that can swallow a
    click-drag before it ever reaches our pointer listeners, and it doubles
@@ -52,6 +103,9 @@ img {
 body {
   font-family: "M PLUS Rounded 1c", sans-serif;
   font-weight: 400;
+  /* Explicit, so text never falls back to a platform default (iOS was
+     tinting inherited text blue). */
+  color: #1a1a1a;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -63,10 +117,18 @@ button {
   font-weight: 700;
 }
 
+/* iOS renders <button> text in the system tint (blue) unless the native
+   appearance is reset AND an explicit colour is set — inheriting is not
+   enough, hence -webkit-text-fill-color too. Without this, every button
+   label in the app came out blue on iPhone while looking black on desktop. */
 button {
   border: none;
   background: none;
   cursor: pointer;
+  color: inherit;
+  -webkit-text-fill-color: currentColor;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 /* Font */
