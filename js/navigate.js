@@ -125,8 +125,10 @@ const swipeHandlers = {
           state.screen = "outro";
           state.outroSlideIndex = 0;
         });
+      } else {
+        const t = content[state.language];
+        showToast(t.ui.topicsCompleteLockToast);
       }
-      // Not all 3 topics done yet — no toast defined for this screen, silently do nothing.
     },
     right: () => {
       goTo("back", () => {

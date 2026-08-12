@@ -78,6 +78,16 @@ function decorativeScatterHTML(count = 5) {
   return `<div class="deco-layer">${iconsHTML}</div>`;
 }
 
+// Home screen title. Kept local rather than in content.js because this
+// phase is styling-only and content.js is frozen — move it into
+// content.js's ui object later if you'd rather it live with the rest of
+// the copy. "調査" matches the wording already used by
+// quickSurveyButton / fullSurveyButton.
+const HOME_TITLE = {
+  EN: "ECLIPSE Survey",
+  JP: "ECLIPSE 調査",
+};
+
 function screenHome(state) {
   const t = content[state.language];
 
@@ -85,12 +95,14 @@ function screenHome(state) {
     <div class="screen screen-home">
       ${decorativeScatterHTML()}
       <div class="top-bar">
-        ${homeIconButton()}
         <button class="lang-toggle" data-action="toggle-language">${t.ui.languageToggle}</button>
       </div>
       <div class="home-content">
-        <button class="mode-button" data-action="select-mode" data-mode="quick">${t.ui.quickSurveyButton}</button>
-        <button class="mode-button" data-action="select-mode" data-mode="full">${t.ui.fullSurveyButton}</button>
+        <h1 class="home-title">${HOME_TITLE[state.language]}</h1>
+        <div class="home-mode-row">
+          <button class="mode-button" data-action="select-mode" data-mode="quick">${t.ui.quickSurveyButton}</button>
+          <button class="mode-button" data-action="select-mode" data-mode="full">${t.ui.fullSurveyButton}</button>
+        </div>
         <button class="results-button" data-action="view-results">${t.ui.resultsButton}</button>
       </div>
     </div>
@@ -110,6 +122,7 @@ function screenIntro(state) {
           <h1>${slide.title}</h1>
           <p class="intro-slide__tagline">${slide.tagline.replace(/\n/g, "<br>")}</p>
         </div>
+        <img class="intro-slide__title-art" src="assets/icons/deco-bulb-book-abc.png" alt="" draggable="false" />
       </div>
     `;
   } else if (slide.type === "whoAreWe") {
@@ -320,9 +333,10 @@ function screenOutro(state) {
   if (slide.type === "closer") {
     slideHTML = `
       <div class="outro-slide outro-slide--closer">
+        <img class="outro-slide__closer-art" src="assets/icons/deco-pencil-book.png" alt="" draggable="false" />
         <h1>${slide.title}</h1>
-        <p class="outro-slide__subtitle">${slide.subtitle}</p>
         <p class="outro-slide__tagline">${slide.tagline.replace(/\n/g, "<br>")}</p>
+        <p class="outro-slide__subtitle">&ldquo;${slide.subtitle}&rdquo;</p>
       </div>
     `;
   } else if (slide.type === "showcase") {
@@ -374,6 +388,7 @@ function screenThankYou(state) {
         <h1>${t.ui.endTitle}</h1>
         <p>${t.ui.endBody}</p>
       </div>
+      <img class="thank-you-art" src="assets/icons/deco-bulb.png" alt="" draggable="false" />
     </div>
   `;
 }

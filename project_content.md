@@ -117,7 +117,8 @@ const state = {
 ## Screen List
 
 - Surveyor home
-- Intro slides (4, including the ECLIPSE title slide as slide 1)
+- Intro slides (2 — title and Who Are We only; the suicide-stats and
+  mental-illness slides were removed per client request)
 - 9-topic grid
 - 3-topic menu *(full mode only)*
 - Questions screen
@@ -129,9 +130,17 @@ const state = {
 - Results screen
 
 There is **no separate "title screen"** — the ECLIPSE title is the first of
-the 4 intro slides, not its own step. The ECLIPSE tagline/"心が変われば世界が
+the 2 intro slides, not its own step. The ECLIPSE tagline/"心が変われば世界が
 変わる" content appears only once in the app, as `outroSlides[0]` — it is
 **not** duplicated into `introSlides`.
+
+**Removed slides:** the suicide-stats slide (`introSlides[2]`) and the
+mental-illness slide (`introSlides[3]`) were removed from `content.js` at
+the client's request. `introSlides` now has exactly 2 entries: `title` and
+`whoAreWe`. Their asset files (`intro-stats.png`,
+`intro-mentalhealth.png`) and reference screenshots
+(`reference-slide-intro-stats.png`, `reference-slide-intro-mentalhealth.png`)
+are no longer used — leave them in the repo, just don't build against them.
 
 ---
 
@@ -139,7 +148,7 @@ the 4 intro slides, not its own step. The ECLIPSE tagline/"心が変われば世
 
 | Step | Screen |
 |---|---|
-| 1 | Intro slides (4, swipeable) |
+| 1 | Intro slides (2, swipeable — title, then Who Are We) |
 | 2 | 9-topic grid — pick exactly 3 |
 | 3 | 3-topic menu — shows the 3 chosen topics, each with a Skip option. **No slide reference exists for this screen** (it's original to this app, not in the PowerPoint) — layout is 3 topic buttons stacked vertically top-to-bottom, same background and button style as the rest of the app. |
 | 4 | Questions screen — per topic, surveyor reads aloud, can skip individual questions. Topic turns green when finished OR skipped. Re-entering a completed/skipped topic keeps it green. |
@@ -153,7 +162,7 @@ the 4 intro slides, not its own step. The ECLIPSE tagline/"心が変われば世
 
 | Step | Screen |
 |---|---|
-| 1 | Intro slides (4, same as full) |
+| 1 | Intro slides (2, same as full) |
 | 2 | 9-topic grid — pick exactly 3 (different topic list — see Topics below) |
 | 3 | 5 fixed questions (same regardless of topic chosen) — **no skip button**; surveyor moves faster by simply swiping left through questions |
 | 4 | Outro slide 1 |
@@ -304,8 +313,8 @@ home screen.
   - **Focused view** (`"focused"`, default) — 3 columns × 1 row visible,
     large posters with titles underneath, vertically scrollable to reveal
     the remaining 3 rows (12 sermons total, 4 rows of 3).
-  - **Grid view** (`"grid"`) — all 12 visible at once, **no scroll** (4
-    columns × 3 rows fits in landscape), smaller thumbnails, titles still
+  - **Grid view** (`"grid"`) — all 12 visible at once, **no scroll** (6
+    columns × 2 rows fits in landscape), smaller thumbnails, titles still
     shown but compact. Lets the surveyor scan everything before deciding.
   - Toggle icons are simple geometric shapes — build as **inline SVG**, no
     image asset: icon 1 = 3 stacked vertical bars (switches to Focused),
@@ -382,7 +391,10 @@ Each completed survey (reaching the Thank You screen) is appended to
 ## Content Reference (`content.js`)
 
 `content.js` is **complete** — do not restructure its shape without a good
-reason. Structure:
+reason. One addition made after initial completion: `ui.topicGridPrompt`
+(EN: "What matters most to you?" / JP: "重要だと思うものはありますか？") —
+a subtitle shown above the 9-topic grid, pulled from the original slide's
+prompt text. Structure:
 
 ```js
 const content = {
@@ -430,9 +442,11 @@ and sermons and results all reference each other by the same key strings
 | Decorative elements | `deco-*.png` icons — clouds, stars, blocks, erasers, pencil-book, bulb, bulb-book-abc — scattered sparsely, varied size/rotation, absolutely positioned. See `assets/reference/reference-bg-scatter-*.png` for density/placement reference — **not meant to be recreated exactly**, just similar sparse scattered flavor. |
 | Topic pills | Yellow rounded buttons |
 | Sermon posters | Plain PNGs, no baked-in text (bilingual titles rendered as real HTML) |
-| Ring charts (intro stats slide) | **Built as SVG**, not an image — animated: the colored arc grows from 0 to its target percentage when the slide enters view, using `stroke-dasharray`/`stroke-dashoffset` |
 | Screen transitions | Sliding — forward from right, back from left |
 | Top bar | Home icon (inline SVG) top-left on every screen; language toggle top-right on surveyor home |
+
+*(Ring chart row removed — the suicide-stats slide that used it was cut
+from the app; see "Known Resolved Conflicts" at the bottom.)*
 
 ---
 
@@ -448,8 +462,11 @@ showcase-01.png → showcase-03.png (outro slide 2 — 3 symposium posters)
 outro-symposium.png                (outro slide 3 — zoom call photo)
 outro-event.png                    (outro slide 3 — picnic/event photo)
 intro-whoarewe.png                 (intro slide 2 — world map illustration)
-intro-stats.png                    (intro slide 3 — suicide stats illustration, text removed)
-intro-mentalhealth.png             (intro slide 4 — mental illness photo, icons baked in, no text)
+```
+**UNUSED — do not build against these, kept in repo but orphaned:**
+```
+intro-stats.png                    (was intro slide 3 — removed from app)
+intro-mentalhealth.png             (was intro slide 4 — removed from app)
 ```
 
 ### `assets/icons/`
@@ -471,14 +488,17 @@ reference-bg-scatter-1.png
 reference-bg-scatter-2.png
 reference-slide-intro-title.png
 reference-slide-intro-whoarewe.png
-reference-slide-intro-stats.png
-reference-slide-intro-mentalhealth.png
 reference-slide-topic-grid.png
 reference-slide-question.png
 reference-slide-outro-closer.png
 reference-slide-sermon-picker.png
 reference-slide-outro-showcase.png
 reference-slide-outro-activities.png
+```
+**UNUSED — do not build against these, kept in repo but orphaned:**
+```
+reference-slide-intro-stats.png
+reference-slide-intro-mentalhealth.png
 ```
 **Not loaded by the app.** These exist purely as visual reference for
 development (human or AI) — button shapes, spacing, and colors from the
@@ -498,13 +518,11 @@ this document instead.
 |---|---|---|
 | Intro slide 1 (Title) | — | `reference-slide-intro-title.png` |
 | Intro slide 2 (Who Are We) | `intro-whoarewe.png` | `reference-slide-intro-whoarewe.png` |
-| Intro slide 3 (Stats) | `intro-stats.png` | `reference-slide-intro-stats.png` |
-| Intro slide 4 (Mental Illness) | `intro-mentalhealth.png` | `reference-slide-intro-mentalhealth.png` |
 | 9-topic grid | — | `reference-slide-topic-grid.png` |
 | 3-topic menu | — | *(none — see Full Survey Flow table for layout)* |
 | Questions screen (full & quick) | — | `reference-slide-question.png` |
 | Outro slide 1 (Closer) | — | `reference-slide-outro-closer.png` |
-| Sermon picker | `sermon-01.png` → `sermon-12.png` | `reference-slide-sermon-picker.png` *(original was 5-col grid — not followed; see Sermon Picker section for actual layout)* |
+| Sermon picker | `sermon-01.png` → `sermon-12.png` | `reference-slide-sermon-picker.png` *(original was 5-col grid — Focused view uses 3-col scroll, Grid view uses 6-col × 2-row, no scroll; see Sermon Picker section)* |
 | Outro slide 2 (Showcase) | `showcase-01.png`, `showcase-02.png`, `showcase-03.png` | `reference-slide-outro-showcase.png` |
 | Outro slide 3 (Activities) | `outro-symposium.png`, `outro-event.png` | `reference-slide-outro-activities.png` |
 | Surveyor home / Thank You / Results | — | *(no reference — original screens, described in text)* |
@@ -524,7 +542,11 @@ decisions made during development. This file is authoritative; specifically:
 - Orientation is **landscape-locked only**, not portrait+landscape.
 - Sermon posters have **no baked-in text** — titles are real bilingual HTML
   text, not part of the image.
-- There are **4 intro slides**, and the ECLIPSE title is the first of them,
-  not a separate screen before them. The tagline/"心が変われば世界が変わる"
-  slide appears only in `outroSlides[0]`, not duplicated into `introSlides`.
+- There are **2 intro slides** (title, then Who Are We) — the suicide-stats
+  and mental-illness slides were removed at the client's request partway
+  through development. The ECLIPSE title is the first of the 2, not a
+  separate screen before them. The tagline/"心が変われば世界が変わる" slide
+  appears only in `outroSlides[0]`, not duplicated into `introSlides`.
 - Navigation uses a **single Home icon button**, not a hamburger menu.
+- Sermon picker Grid view is **6 columns × 2 rows**, not 4×3 — chosen by
+  the client as a better fit for the landscape aspect ratio.
