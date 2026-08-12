@@ -41,6 +41,19 @@ function isInstalled() {
   );
 }
 
+// True only for actual Google Chrome. Plenty of Android browsers put
+// "Chrome/" in their UA string (Edge, Samsung Internet, Opera, Brave, UC,
+// Yandex), so those have to be excluded explicitly or they'd be given
+// Chrome-specific menu wording that doesn't match their UI.
+function isChromeBrowser() {
+  const ua = window.navigator.userAgent;
+  const claimsChrome = /chrome\//i.test(ua);
+  const isOtherBrowser = /edga?\/|edg\/|samsungbrowser|opr\/|opera|ucbrowser|yabrowser|brave|firefox|fxios/i.test(
+    ua
+  );
+  return claimsChrome && !isOtherBrowser;
+}
+
 function isIosSafari() {
   const ua = window.navigator.userAgent;
   const isIos = /iphone|ipad|ipod/i.test(ua);
@@ -97,9 +110,16 @@ const GATE_TEXT = {
     jp: "インストール",
     en: "Install",
   },
-  manualHelp: {
-    jp: "ボタンが動作しない場合は、ブラウザのメニュー（⋮）から「アプリをインストール」または「ホーム画面に追加」を選んでください。",
-    en: "If the button does nothing, open your browser menu (⋮) and choose “Install app” or “Add to Home Screen”.",
+  // Chrome-specific wording, used only when we're confident it's real Chrome.
+  manualHelpChrome: {
+    jp: "ボタンが動作しない場合は、右上の「⋮」メニューから「アプリをインストール」を選んでください。",
+    en: "If the button does nothing, open the ⋮ menu (top right) and choose “Install app”.",
+  },
+  // Deliberately generic for every other Android browser (Samsung Internet,
+  // Firefox, Edge, …) — their menus differ and are not worth enumerating.
+  manualHelpGeneric: {
+    jp: "ブラウザのメニューを開き、「アプリをインストール」または「ホーム画面に追加」を探してください。",
+    en: "Open your browser's menu and look for “Install app” or “Add to Home Screen”.",
   },
   reopenNote: {
     jp: "インストール後は、ホーム画面のアイコンから開いてください。",
@@ -133,7 +153,7 @@ function renderGate() {
             : `<button class="gate__button" id="gate-install">${GATE_TEXT.installButton.jp} / ${GATE_TEXT.installButton.en}</button>`
         }
         <div class="gate__help ${ios ? "" : "gate__help--hidden"}" id="gate-help">
-          ${ios ? "" : line("manualHelp")}
+          ${ios ? "" : line(isChromeBrowser() ? "manualHelpChrome" : "manualHelpGeneric")}
           ${line("reopenNote")}
         </div>
       </div>

@@ -312,10 +312,22 @@ function showToast(message) {
 }
 
 function handleAppClick(e) {
-  if (isTransitioning) return;
+  // Swallow the click that a completed swipe leaves behind (see
+  // handlePointerUp), so swiping can't also press whatever was under the
+  // finger. Reset on the next pointerdown, not here, because a swipe that
+  // detaches its target may not emit a click at all.
+  if (swipeDidNavigate) return;
 
   const target = e.target.closest("[data-action]");
   if (!target) return;
+
+  // This used to be a blanket `if (isTransitioning) return;`, which dropped
+  // EVERY tap for the duration of a screen animation — including legitimate
+  // taps on the new screen, which is already live and interactive. The real
+  // goal was only to ignore clicks landing on the outgoing screen, so check
+  // that directly: anything inside the current screen is fair game.
+  if (currentScreenEl && !currentScreenEl.contains(target)) return;
+
   const action = target.dataset.action;
 
   if (action === "home") {
@@ -432,6 +444,7 @@ let swipeLastY = null;
 let swipeAxisLocked = false;
 let swipeIsHorizontal = false;
 let swipeScrollTarget = null;
+let swipeDidNavigate = false;
 
 const SWIPE_DECISION_THRESHOLD = 10;
 const SWIPE_THRESHOLD = 60;
@@ -449,16 +462,27 @@ function handlePointerDown(e) {
   swipeLastY = e.clientY;
   swipeAxisLocked = false;
   swipeIsHorizontal = false;
+  swipeDidNavigate = false;
   // The sermon picker's focused view has touch-action:none (see screens.css)
   // so the browser never natively scrolls it — if the gesture turns out to
   // be vertical, we drive its scrollTop ourselves below instead.
   swipeScrollTarget = e.target.closest(".sermon-grid--focused");
 }
 
-// Once a gesture is clearly horizontal, we preventDefault() on every further
-// move so the browser never hijacks it for native image-drag. If it's
-// vertical and started over the sermon grid, we scroll it manually — see
-// handlePointerDown for why native scroll is disabled there.
+// NOTE: this deliberately does NOT call preventDefault().
+//
+// It used to, as soon as the gesture axis-locked (only 10px of movement).
+// Calling preventDefault() on a touch-derived pointermove suppresses the
+// browser's follow-up `click` event — and a real finger tap almost always
+// drifts a few pixels, so taps that drifted past 10px horizontally silently
+// produced no click at all. That was the "first tap does nothing, second
+// tap works" bug.
+//
+// preventDefault() was never needed here anyway: gesture ownership is
+// already declared in CSS. #app has touch-action:pan-y (no native
+// horizontal panning) and .sermon-grid--focused has touch-action:none (no
+// native scrolling, we drive scrollTop ourselves). Text selection and image
+// dragging are blocked by user-select:none / -webkit-user-drag:none.
 function handlePointerMove(e) {
   if (swipeStartX === null) return;
 
@@ -473,10 +497,7 @@ function handlePointerMove(e) {
     swipeIsHorizontal = Math.abs(deltaX) > Math.abs(deltaY);
   }
 
-  if (swipeIsHorizontal) {
-    e.preventDefault();
-  } else if (swipeScrollTarget) {
-    e.preventDefault();
+  if (!swipeIsHorizontal && swipeScrollTarget) {
     swipeScrollTarget.scrollTop -= (e.clientY - swipeLastY) * SERMON_SCROLL_SPEED;
     if (typeof updateSermonScrollIndicator === "function") updateSermonScrollIndicator();
   }
@@ -497,6 +518,11 @@ function handlePointerUp(e) {
 
   const handlers = swipeHandlers[state.screen];
   if (!handlers) return;
+
+  // Now that we no longer preventDefault(), a completed swipe still emits a
+  // click on whatever was under the finger. Flag it so handleAppClick can
+  // swallow that one click and a swipe can't accidentally press a button.
+  swipeDidNavigate = true;
 
   if (deltaX < 0) {
     handlers.left && handlers.left();
@@ -519,7 +545,10 @@ function initNavigation() {
 
   document.getElementById("app").addEventListener("click", handleAppClick);
   document.addEventListener("pointerdown", handlePointerDown);
-  document.addEventListener("pointermove", handlePointerMove, { passive: false });
+  // passive:true — this handler must never preventDefault(), because doing
+  // so suppresses the follow-up click and breaks taps (see handlePointerMove).
+  // Marking it passive makes the browser reject any future attempt to.
+  document.addEventListener("pointermove", handlePointerMove, { passive: true });
   document.addEventListener("pointerup", handlePointerUp);
   document.addEventListener("pointercancel", handlePointerCancel);
 }
