@@ -433,7 +433,14 @@ function screenResults(state) {
       })
       .join("");
 
-    bodyHTML = `<div class="results-list">${entriesHTML}</div>`;
+    bodyHTML = `
+      <div class="results-list-area">
+        <div class="results-list" onscroll="updateResultsScrollIndicator()">${entriesHTML}</div>
+        <div class="results-scroll-indicator">
+          <div class="results-scroll-indicator__thumb"></div>
+        </div>
+      </div>
+    `;
   }
 
   const copyAllHTML = copyVisible
@@ -564,7 +571,35 @@ function updateSermonScrollIndicator() {
   thumb.style.top = `${scrollPct}%`;
 }
 
+// Native scrollbars are hidden app-wide (see main.css), so the results list
+// needs its own indicator to show there's more below. Hides itself when the
+// entries already fit without scrolling.
+function updateResultsScrollIndicator() {
+  if (!currentScreenEl) return;
+
+  const list = currentScreenEl.querySelector(".results-list");
+  const indicator = currentScreenEl.querySelector(".results-scroll-indicator");
+  const thumb = currentScreenEl.querySelector(".results-scroll-indicator__thumb");
+  if (!list || !indicator || !thumb) return;
+
+  const { scrollTop, scrollHeight, clientHeight } = list;
+  const scrollable = scrollHeight > clientHeight + 1;
+  indicator.classList.toggle("results-scroll-indicator--hidden", !scrollable);
+  if (!scrollable) return;
+
+  const thumbHeightPct = Math.max((clientHeight / scrollHeight) * 100, 10);
+  const maxScroll = scrollHeight - clientHeight;
+  const scrollPct = maxScroll > 0 ? (scrollTop / maxScroll) * (100 - thumbHeightPct) : 0;
+
+  thumb.style.height = `${thumbHeightPct}%`;
+  thumb.style.top = `${scrollPct}%`;
+}
+
 function afterScreenMount() {
+  if (state.screen === "results") {
+    updateResultsScrollIndicator();
+  }
+
   if (state.screen === "sermonPicker") {
     sizeSermonPosters();
     updateSermonScrollIndicator();
