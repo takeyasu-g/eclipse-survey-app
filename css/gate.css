@@ -1,0 +1,95 @@
+/* Install gate — the only screen visible when the app isn't installed.
+   Works in portrait or landscape, since orientation can't be locked until
+   the app is actually installed. */
+
+.gate {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(env(safe-area-inset-top) + 20px) calc(env(safe-area-inset-right) + 20px)
+    calc(env(safe-area-inset-bottom) + 20px) calc(env(safe-area-inset-left) + 20px);
+  overflow-y: auto;
+  background-color: #f3ecd8;
+  background-image: linear-gradient(rgba(120, 108, 78, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120, 108, 78, 0.12) 1px, transparent 1px);
+  background-size: 28px 28px;
+  font-family: "M PLUS Rounded 1c", sans-serif;
+}
+
+.gate__card {
+  width: 100%;
+  max-width: 520px;
+  padding: 28px 26px;
+  border: 2px solid #000;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.75);
+  text-align: center;
+}
+
+.gate__brand {
+  font-size: clamp(2.4rem, 9vw, 3.4rem);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+  margin-bottom: 16px;
+}
+
+.gate__line {
+  margin-bottom: 14px;
+}
+
+.gate__jp,
+.gate__en {
+  display: block;
+  line-height: 1.55;
+}
+
+.gate__jp {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.gate__en {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.gate__button {
+  display: inline-block;
+  margin: 8px 0 4px;
+  padding: 14px 34px;
+  border: 2px solid #000;
+  border-radius: 999px;
+  background: #ffcc4d;
+  font-family: inherit;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.gate__button:active {
+  background-color: #e0a92c;
+  transform: scale(0.96);
+}
+
+.gate__help {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.35);
+}
+
+.gate__help .gate__jp {
+  font-size: 0.92rem;
+  font-weight: 400;
+}
+
+.gate__help .gate__en {
+  font-size: 0.82rem;
+}
+
+.gate__help--hidden {
+  display: none;
+}

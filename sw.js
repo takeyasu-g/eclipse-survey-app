@@ -9,7 +9,7 @@
  * If you DON'T bump it, returning users keep being served the old cached
  * files forever and will never see your changes.
  */
-const CACHE_NAME = "eclipse-cache-v1";
+const CACHE_NAME = "eclipse-cache-v2";
 
 /*
  * Paths are relative ("./...") on purpose — this app is served from a
@@ -33,13 +33,13 @@ const PRECACHE_URLS = [
   "./css/main.css",
   "./css/screens.css",
   "./css/animations.css",
-  "./css/pwa.css",
+  "./css/gate.css",
 
+  "./js/gate.js",
   "./js/content.js",
   "./js/screens.js",
   "./js/navigate.js",
   "./js/app.js",
-  "./js/pwa.js",
 
   "./assets/fonts/M_PLUS_Rounded_1c/MPLUSRounded1c-Regular.ttf",
   "./assets/fonts/M_PLUS_Rounded_1c/MPLUSRounded1c-Bold.ttf",

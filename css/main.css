@@ -14,11 +14,21 @@ body,
   width: 100%;
 }
 
+/* Safe-area padding is applied here, on the single outermost container, so
+   every screen inherits it — .screen children are absolutely positioned with
+   inset:0, and an absolutely positioned element's containing block is its
+   ancestor's PADDING box, so this padding insets all of them.
+   Needed because the manifest uses display:"fullscreen", which removes the
+   OS status bar entirely and would otherwise let content sit under a notch
+   or camera cutout. Requires viewport-fit=cover in index.html for these
+   env() values to resolve to anything but zero. */
 #app {
   position: relative;
   overflow: hidden;
   touch-action: pan-y;
   user-select: none;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
 }
 
 img {

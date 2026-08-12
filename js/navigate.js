@@ -436,6 +436,13 @@ let swipeScrollTarget = null;
 const SWIPE_DECISION_THRESHOLD = 10;
 const SWIPE_THRESHOLD = 60;
 
+// The sermon grid is scrolled manually (native touch scrolling is disabled
+// there so it can't steal the left/right navigation swipe). A raw 1:1
+// mapping felt sluggish on a real phone, because one row is nearly a full
+// screen tall — so a whole drag barely advanced a single row. This
+// multiplier makes each drag travel further.
+const SERMON_SCROLL_SPEED = 2.4;
+
 function handlePointerDown(e) {
   swipeStartX = e.clientX;
   swipeStartY = e.clientY;
@@ -470,7 +477,7 @@ function handlePointerMove(e) {
     e.preventDefault();
   } else if (swipeScrollTarget) {
     e.preventDefault();
-    swipeScrollTarget.scrollTop -= e.clientY - swipeLastY;
+    swipeScrollTarget.scrollTop -= (e.clientY - swipeLastY) * SERMON_SCROLL_SPEED;
     if (typeof updateSermonScrollIndicator === "function") updateSermonScrollIndicator();
   }
 

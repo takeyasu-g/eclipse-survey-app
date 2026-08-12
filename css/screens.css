@@ -460,19 +460,31 @@
    cannot overflow its container. padding-top clears the floating top-bar
    icons, which the fixed 2-row layout can't scroll past the way focused
    view can. */
+/* Posters here are height-limited (width follows from the 2:3 ratio), so
+   every pixel of vertical space reclaimed makes them bigger. padding-top
+   is the clearance for the floating top-bar icons and can't go much below
+   this without them covering the corner posters. */
 .sermon-grid--grid {
   height: 100%;
-  padding-top: 50px;
+  padding-top: 44px;
+  margin-bottom: -8px;
   grid-template-columns: repeat(6, 1fr);
   grid-template-rows: repeat(2, 1fr);
-  gap: 6px;
+  gap: 4px;
   justify-items: center;
   overflow: hidden;
+}
+
+/* No scroll indicator in grid view, so the track's reserved gutter is
+   dead space here — reclaim it for the posters. */
+.screen-sermon-picker .sermon-grid-area:has(.sermon-grid--grid) {
+  padding-right: 0;
 }
 
 .sermon-grid--grid .sermon-poster {
   height: 100%;
   min-height: 0;
+  gap: 3px;
   justify-content: flex-start;
 }
 
@@ -542,7 +554,7 @@
    its poster taller than the others. This fixed height is what guarantees
    all 12 images end up identically sized and aligned. */
 .sermon-grid--grid .sermon-poster__title {
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   height: 2.4em; /* 2 lines x line-height 1.2 */
   display: -webkit-box;
   -webkit-line-clamp: 2;

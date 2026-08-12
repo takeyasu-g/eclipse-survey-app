@@ -1,10 +1,10 @@
 {
-  "name": "ECLIPSE Survey",
+  "name": "ECLIPSE",
   "short_name": "ECLIPSE",
   "description": "Bilingual street outreach survey app for ECLIPSE.",
   "start_url": "./",
   "scope": "./",
-  "display": "standalone",
+  "display": "fullscreen",
   "orientation": "landscape",
   "background_color": "#f3ecd8",
   "theme_color": "#f3ecd8",
