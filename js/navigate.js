@@ -321,6 +321,9 @@ function showToast(message) {
   }, 1800);
 }
 
+// Activation is driven from pointerup (see handlePointerUp), NOT from the
+// browser's synthesised click. `click` is only kept as a fallback for input
+// methods that never produce our pointer sequence (keyboard/assistive tech).
 function handleAppClick(e) {
   // Swallow the click that a completed swipe leaves behind (see
   // handlePointerUp), so swiping can't also press whatever was under the
@@ -328,13 +331,22 @@ function handleAppClick(e) {
   // detaches its target may not emit a click at all.
   if (swipeDidNavigate) return;
 
+  // Already handled on pointerup — don't run it twice.
+  if (suppressNextClick) {
+    suppressNextClick = false;
+    return;
+  }
+
   const target = e.target.closest("[data-action]");
   if (!target) return;
+  performAction(target);
+}
 
+function performAction(target) {
   // This used to be a blanket `if (isTransitioning) return;`, which dropped
   // EVERY tap for the duration of a screen animation — including legitimate
   // taps on the new screen, which is already live and interactive. The real
-  // goal was only to ignore clicks landing on the outgoing screen, so check
+  // goal was only to ignore input landing on the outgoing screen, so check
   // that directly: anything inside the current screen is fair game.
   if (currentScreenEl && !currentScreenEl.contains(target)) return;
 
@@ -455,9 +467,13 @@ let swipeAxisLocked = false;
 let swipeIsHorizontal = false;
 let swipeScrollTarget = null;
 let swipeDidNavigate = false;
+let suppressNextClick = false;
 
 const SWIPE_DECISION_THRESHOLD = 10;
 const SWIPE_THRESHOLD = 60;
+// How much finger drift still counts as a tap rather than a drag. Generous,
+// because a real finger always moves a little on a button press.
+const TAP_SLOP = 16;
 
 // The sermon grid is scrolled manually (native touch scrolling is disabled
 // there so it can't steal the left/right navigation swipe). A raw 1:1
@@ -473,6 +489,7 @@ function handlePointerDown(e) {
   swipeAxisLocked = false;
   swipeIsHorizontal = false;
   swipeDidNavigate = false;
+  suppressNextClick = false;
   // The sermon picker's focused view has touch-action:none (see screens.css)
   // so the browser never natively scrolls it — if the gesture turns out to
   // be vertical, we drive its scrollTop ourselves below instead.
@@ -524,7 +541,25 @@ function handlePointerUp(e) {
   swipeStartY = null;
   swipeScrollTarget = null;
 
-  if (Math.abs(deltaX) < SWIPE_THRESHOLD || Math.abs(deltaX) < Math.abs(deltaY)) return;
+  const isSwipe = Math.abs(deltaX) >= SWIPE_THRESHOLD && Math.abs(deltaX) >= Math.abs(deltaY);
+
+  if (!isSwipe) {
+    // Treat a low-movement gesture as a tap and act on it NOW, rather than
+    // waiting for the browser's synthesised click. The click that follows can
+    // be delayed (gesture disambiguation, main-thread work from rendering the
+    // new screen), which is what made buttons feel dead for a moment after
+    // navigating. pointerup fires the instant the finger lifts.
+    if (Math.abs(deltaX) < TAP_SLOP && Math.abs(deltaY) < TAP_SLOP) {
+      // Touch uses implicit pointer capture, so e.target here is the element
+      // the press STARTED on — which is the correct tap semantics anyway.
+      const target = e.target.closest && e.target.closest("[data-action]");
+      if (target) {
+        suppressNextClick = true;
+        performAction(target);
+      }
+    }
+    return;
+  }
 
   const handlers = swipeHandlers[state.screen];
   if (!handlers) return;
