@@ -1,5 +1,8 @@
-let isTransitioning = false;
 let currentScreenEl = null;
+// Set while a screen transition is animating; calling it finishes that
+// transition immediately. A NEW navigation calls this rather than being
+// ignored, so transitions are interruptible instead of swallowing input.
+let finishCurrentTransition = null;
 
 // The client asked to drop the suicide-stats and mental-illness intro
 // slides from the flow entirely (both survey modes). The data stays in
@@ -10,7 +13,12 @@ let currentScreenEl = null;
 const INTRO_SLIDE_COUNT = 2;
 
 function goTo(direction, mutateFn) {
-  if (isTransitioning) return;
+  // Previously this bailed out entirely while a transition was running, so
+  // every tap/swipe during the ~320ms animation was silently dropped — that
+  // was the "have to wait a moment before it responds" bug. Instead,
+  // fast-forward the in-flight transition to its end state and carry on with
+  // the new one, so input is never ignored.
+  if (finishCurrentTransition) finishCurrentTransition();
 
   const app = document.getElementById("app");
   const oldEl = currentScreenEl;
@@ -28,7 +36,6 @@ function goTo(direction, mutateFn) {
     return;
   }
 
-  isTransitioning = true;
   app.appendChild(newEl);
   currentScreenEl = newEl;
 
@@ -42,15 +49,18 @@ function goTo(direction, mutateFn) {
   function finishTransition() {
     if (finished) return;
     finished = true;
+    clearTimeout(safetyTimer);
     newEl.classList.remove(inClass);
     if (oldEl.isConnected) oldEl.remove();
-    isTransitioning = false;
+    if (finishCurrentTransition === finishTransition) finishCurrentTransition = null;
   }
+
+  finishCurrentTransition = finishTransition;
 
   newEl.addEventListener("animationend", finishTransition, { once: true });
   // Safety net: a screen transition must never be able to permanently jam
   // navigation, no matter what goes wrong with the animation itself.
-  setTimeout(finishTransition, 500);
+  const safetyTimer = setTimeout(finishTransition, 400);
 
   safeAfterScreenMount();
 }

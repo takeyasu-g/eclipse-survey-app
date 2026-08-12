@@ -35,17 +35,25 @@
 }
 
 .screen-anim-in-right {
-  animation: slideInFromRight 320ms ease forwards;
+  animation: slideInFromRight 200ms ease forwards;
 }
 
 .screen-anim-in-left {
-  animation: slideInFromLeft 320ms ease forwards;
+  animation: slideInFromLeft 200ms ease forwards;
+}
+
+/* The outgoing screen is on its way out and must not absorb taps while it
+   slides away — without this, a tap aimed at the incoming screen can land on
+   the old one instead and appear to do nothing. */
+.screen-anim-out-left,
+.screen-anim-out-right {
+  pointer-events: none;
 }
 
 .screen-anim-out-left {
-  animation: slideOutToLeft 320ms ease forwards;
+  animation: slideOutToLeft 200ms ease forwards;
 }
 
 .screen-anim-out-right {
-  animation: slideOutToRight 320ms ease forwards;
+  animation: slideOutToRight 200ms ease forwards;
 }
