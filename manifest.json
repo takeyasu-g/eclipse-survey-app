@@ -4,7 +4,7 @@
   "description": "Bilingual street outreach survey app for ECLIPSE.",
   "start_url": "./",
   "scope": "./",
-  "display": "fullscreen",
+  "display": "standalone",
   "orientation": "landscape",
   "background_color": "#f3ecd8",
   "theme_color": "#f3ecd8",
